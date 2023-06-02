@@ -1,0 +1,36 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v6.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v6.0": {
+      "BugTracker/1.0.0": {
+        "dependencies": {
+          "BugTracker.Contracts": "1.0.0"
+        },
+        "runtime": {
+          "BugTracker.dll": {}
+        }
+      },
+      "BugTracker.Contracts/1.0.0": {
+        "runtime": {
+          "BugTracker.Contracts.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "BugTracker/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "BugTracker.Contracts/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

@@ -1,0 +1,12 @@
+C:\Users\adity\Desktop\C#API\BugTracker\BugTracker.Contracts\bin\Debug\net6.0\BugTracker.Contracts.deps.json
+C:\Users\adity\Desktop\C#API\BugTracker\BugTracker.Contracts\bin\Debug\net6.0\BugTracker.Contracts.dll
+C:\Users\adity\Desktop\C#API\BugTracker\BugTracker.Contracts\bin\Debug\net6.0\BugTracker.Contracts.pdb
+C:\Users\adity\Desktop\C#API\BugTracker\BugTracker.Contracts\obj\Debug\net6.0\BugTracker.Contracts.csproj.AssemblyReference.cache
+C:\Users\adity\Desktop\C#API\BugTracker\BugTracker.Contracts\obj\Debug\net6.0\BugTracker.Contracts.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\adity\Desktop\C#API\BugTracker\BugTracker.Contracts\obj\Debug\net6.0\BugTracker.Contracts.AssemblyInfoInputs.cache
+C:\Users\adity\Desktop\C#API\BugTracker\BugTracker.Contracts\obj\Debug\net6.0\BugTracker.Contracts.AssemblyInfo.cs
+C:\Users\adity\Desktop\C#API\BugTracker\BugTracker.Contracts\obj\Debug\net6.0\BugTracker.Contracts.csproj.CoreCompileInputs.cache
+C:\Users\adity\Desktop\C#API\BugTracker\BugTracker.Contracts\obj\Debug\net6.0\BugTracker.Contracts.dll
+C:\Users\adity\Desktop\C#API\BugTracker\BugTracker.Contracts\obj\Debug\net6.0\refint\BugTracker.Contracts.dll
+C:\Users\adity\Desktop\C#API\BugTracker\BugTracker.Contracts\obj\Debug\net6.0\BugTracker.Contracts.pdb
+C:\Users\adity\Desktop\C#API\BugTracker\BugTracker.Contracts\obj\Debug\net6.0\ref\BugTracker.Contracts.dll
