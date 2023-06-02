@@ -6,7 +6,6 @@ using BugTracker.Models.Project;
 
 namespace BugTracker.Controllers
 {
-    //[Route("api/v1/[controller]")]
     [ApiController]
     public class IssueController : ControllerBase
     {

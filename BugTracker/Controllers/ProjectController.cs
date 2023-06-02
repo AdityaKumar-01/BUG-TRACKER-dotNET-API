@@ -4,7 +4,7 @@ using BugTracker.Models.Project;
 using BugTracker.Contracts.ProjectContracts;
 namespace BugTracker.Controllers
 {
-    //[Route("api/v1/[controller]")]
+    
     [ApiController]
     public class ProjectController : ControllerBase
     {
