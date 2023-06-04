@@ -2,7 +2,6 @@
 using BugTracker.Models.User;
 using BugTracker.Services.User;
 using BugTracker.Contracts.UserContracts;
-
 namespace BugTracker.Controllers
 {
     [ApiController]
@@ -15,44 +14,48 @@ namespace BugTracker.Controllers
         {
             _userService = userService;
         }
-
+        private static Random random = new Random();
+        public static string RandomString()
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            return new string(Enumerable.Repeat(chars, 24)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
         // GET: api/v1/User
         [HttpGet]
-        public List<User> GetAllUser()
+        public Task<List<User>> GetAllUser()
         {
             return _userService.GetAllUser();
         }
 
         // GET: api/v1/User/:UserId
         [HttpGet("{UserId}")]
-        public IActionResult GetByUserId(string UserId)
+        public async Task<IActionResult> GetByUserId(string UserId)
         {
-            var user = _userService.GetByUserId(UserId);
-            var response = new UserResponse(
-                user.UserId);
+            var response = await _userService.GetByUserId(UserId);
 
             return Ok(response);
         }
 
         // POST: api/v1/User
         [HttpPost]
-        public IActionResult Join(JoinUserRequest request)
+        public async Task<IActionResult> Join(JoinUserRequest request)
         {
-            var user = new User(request.UserId, request.password);
-            var response = new UserResponse(_userService.Join(user));
+            var user = new User(RandomString(), request.password);
+            var response = await _userService.Join(user);
 
-            return Ok(response);
+            return CreatedAtAction(nameof(Join), new {id= request.UserId}, response);
         }
 
         // PUT: api/v1/User/
         [HttpPut]
-        public IActionResult UpdateUser(UpsertUserRequest request)
+        public async Task<IActionResult> UpdateUser(UpsertUserRequest request)
         {
             var user = new User(request.UserId, request.password);
 
-            var response = _userService.UpdateUser(user, user.UserId);
+            var response = await _userService.UpdateUser(user, user.UserId);
 
-            return Ok(response.UserId);
+            return Ok(response);
         }
 
         // DELETE: api/v1/User

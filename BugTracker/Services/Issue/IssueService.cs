@@ -1,53 +1,98 @@
 ﻿namespace BugTracker.Services.Issue;
+
+using BugTracker.Models;
 using BugTracker.Models.Issue;
+using Microsoft.Extensions.Options;
+using MongoDB.Bson;
+using MongoDB.Driver;
 
 public class IssueService:IIssueService
 {
-    private static Dictionary<string, Issue> _issues = new Dictionary<string, Issue>();
-
-    public List<string> AddUserToIssue(string UserId, string IssueId)
+    private readonly IMongoCollection<Issue> _issueCollection;
+    public IssueService(IOptions<MongoDBSettings> mongoDBSettings)
     {
-        _issues[IssueId].AssignedTo.Add(UserId);
-        return _issues[IssueId].AssignedTo;
+        MongoClient client = new MongoClient(mongoDBSettings.Value.ConnectionString);
+        IMongoDatabase database = client.GetDatabase(mongoDBSettings.Value.DatabaseName);
+        _issueCollection = database.GetCollection<Issue>(mongoDBSettings.Value.CollectionName[2]);
+    }
+    public async Task<List<string>> AddUserToIssue(string UserId, string IssueId)
+    {
+        FilterDefinition<Issue> filter = Builders<Issue>.Filter.Eq("IssueId", IssueId);
+        UpdateDefinition<Issue> update = Builders<Issue>.Update.AddToSet("AssignedTo", UserId);
+
+        await _issueCollection.UpdateOneAsync(filter, update);
+
+        var updatedProject = await _issueCollection.Find(filter).FirstOrDefaultAsync();
+        var updatedList = updatedProject.AssignedTo;
+        return updatedList;
     }
 
-    public List<string> RemoveUserFromIssue(string UserId, string IssueId)
+    public async Task<List<string>> RemoveUserFromIssue(string UserId, string IssueId)
     {
-        var users = _issues[IssueId].AssignedTo;
-        users.Remove(UserId);
-        _issues[IssueId].AssignedTo = users;
-        return _issues[IssueId].AssignedTo;
+        FilterDefinition<Issue> filter = Builders<Issue>.Filter.Eq("IssueId", IssueId);
+        var updatedIssue = await _issueCollection.Find(filter).FirstOrDefaultAsync();
+        var updatedList = updatedIssue.AssignedTo;
+        updatedList.Remove(UserId);
+
+        UpdateDefinition<Issue> update = Builders<Issue>.Update.Set("AssignedTo", updatedList);
+
+        await _issueCollection.UpdateOneAsync(filter, update);
+
+        return updatedList;
     }
-    public string CreateIssue(Issue Issue)
+    public async Task<string> CreateIssue(Issue issue)
     {
-        _issues[Issue.IssueId] = Issue;
-        return _issues[Issue.IssueId].IssueId;
+        try
+        {
+            await _issueCollection.InsertOneAsync(issue);
+
+        }
+        catch (Exception ex)
+        {
+            return ex.Message;
+        }
+        return issue.IssueId;
     }
 
-    public string DeleteIssue(string IssueId)
+    public async Task<string> DeleteIssue(string IssueId)
     {
-        _issues.Remove(IssueId);
+        try
+        {
+            FilterDefinition<Issue> filter = Builders<Issue>.Filter.Eq("IssueId", IssueId);
+            await _issueCollection.DeleteOneAsync(filter);
+        }
+        catch (Exception ex)
+        {
+            return ex.Message;
+        }
         return IssueId;
     }
 
-    public List<Issue> GetAllIssue()
+    public async Task<List<Issue>> GetAllIssue()
     {
-        var response = new List<Issue>(_issues.Values);
-        return response;
+        return await _issueCollection.Find(new BsonDocument()).ToListAsync();
     }
 
-    public Issue GetByIssueId(string IssueId)
+    public async Task<Issue> GetByIssueId(string IssueId)
     {
-        return _issues[IssueId];
+        FilterDefinition<Issue> filter = Builders<Issue>.Filter.Eq("IssueId", IssueId);
+        return await _issueCollection.Find(filter).FirstOrDefaultAsync();
     }
 
-    public Issue UpdateIssueDetails(Issue Issue, string IssueId)
+    public async Task<Issue> UpdateIssueDetails(Issue issue, string IssueId)
     {
-        _issues[IssueId].IssueDescription = Issue.IssueDescription;
-        _issues[IssueId].IssueName = Issue.IssueName;
-        _issues[IssueId].IssueType = Issue.IssueType;
-        _issues[IssueId].UpdatedAt = Issue.UpdatedAt;
-        return _issues[IssueId];
+
+        FilterDefinition<Issue> filter = Builders<Issue>.Filter.Eq("IssueId", IssueId);
+        UpdateDefinition<Issue> update = Builders<Issue>.Update
+            .Set("IssueName", issue.IssueName)
+            .Set("IssueDescription", issue.IssueDescription)
+            .Set("IssueType", issue.IssueType)
+            .Set("UpdatedAt", issue.UpdatedAt);
+
+        await _issueCollection.UpdateOneAsync(filter, update);
+        var updatedIssue = await _issueCollection.Find(filter).FirstOrDefaultAsync();
+
+        return updatedIssue;
     }
 }
 

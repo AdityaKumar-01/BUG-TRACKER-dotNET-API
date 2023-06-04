@@ -17,29 +17,31 @@ namespace BugTracker.Controllers
         private static Random random = new Random();
         public static string RandomString()
         {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            return new string(Enumerable.Repeat(chars, 10)
-                .Select(s => s[random.Next(s.Length)]).ToArray());
-        }
+            var digits = 24;
+            var bytes = new Byte[24];
+            random.NextBytes(bytes);
 
-        // GET: api/v1/<ProjectController>
-        [HttpGet("api/v1/project")]
-        public List<Project> GetAllProject()
+            var hexArray = Array.ConvertAll(bytes, x => x.ToString("X2"));
+            var hexStr = String.Concat(hexArray);
+            return hexStr;
+        }
+            // GET: api/v1/<ProjectController>
+            [HttpGet("api/v1/project")]
+        public async Task<List<Project>> GetAllProject()
         {
-            return _projectService.GetAllProject();
+            return await _projectService.GetAllProject();
         }
 
         // GET api/<ProjectController>/poj1123
         [HttpGet("api/v1/project/{ProjectId}")]
-        public IActionResult GetByPorjectId(string ProjectId)
+        public async Task<IActionResult> GetByPorjectId(string ProjectId)
         {
-
-            return Ok(_projectService.GetByProjectId(ProjectId));
+            return Ok( await _projectService.GetByProjectId(ProjectId));
         }
 
         // POST api/<ProjectController>
         [HttpPost("api/v1/project")]
-        public IActionResult CreateProject(CreateProjectRequest request)
+        public async Task<IActionResult> CreateProject(CreateProjectRequest request)
         {
             var ProjectId = RandomString();
             var project = new Project(
@@ -53,7 +55,7 @@ namespace BugTracker.Controllers
                 request.UpdatedAt,
                 request.Contributors,
                 request.Tags);
-            var response = _projectService.CreateProject(project);
+            var response = await _projectService.CreateProject(project);
 
             return CreatedAtAction(
                 actionName: nameof(CreateProject),
@@ -63,7 +65,7 @@ namespace BugTracker.Controllers
 
         // PUT api/<ProjectController>/5
         [HttpPatch("api/v1/project/{ProjectId}")]
-        public IActionResult UpdateProjectDetails(UpdateProjectDetailsRequest request, string ProjectId)
+        public async Task<IActionResult> UpdateProjectDetails(UpdateProjectDetailsRequest request, string ProjectId)
         {
             var project = new Project(
                 request.ProjectName,
@@ -71,37 +73,34 @@ namespace BugTracker.Controllers
                 request.Version,
                 request.UpdatedAt,
                 request.Tags);
-            var response = _projectService.UpdateProjectDetails(project,ProjectId);
+            var response = await _projectService.UpdateProjectDetails(project, ProjectId);
 
             return Ok(response);
         }
 
         // DELETE api/<ProjectController>/5
         [HttpDelete("api/v1/project/{ProjectId}")]
-        public IActionResult DeleteProject(string ProjectId)
+        public async Task<IActionResult> DeleteProject(string ProjectId)
         {
-            var response = _projectService.DeleteProject(ProjectId);
+            var response = await _projectService.DeleteProject(ProjectId);
 
             return Ok(response);
         }
 
         //PUT api/v1/<ProjectController>/addcontributor
         [HttpPatch("api/v1/project/addcontributor")]
-        public IActionResult AddContributor(UpdateContributorsRequest request)
+        public async Task<IActionResult> AddContributor(UpdateContributorsRequest request)
         {
-            var response = _projectService.AddUserToProject(request.UserId, request.ProjectId);
+            var response =  await _projectService.AddUserToProject(request.UserId, request.ProjectId);
             return Ok(response);
         }
 
         //PUT api/v1/<ProjectController>/removecontributor
         [HttpPatch("api/v1/project/removecontributor")]
-        public IActionResult RemoveContributor(UpdateContributorsRequest request)
+        public async Task<IActionResult> RemoveContributor(UpdateContributorsRequest request)
         {
-            var response = _projectService.RemoveUserFromProject(request.UserId, request.ProjectId);
+            var response = await _projectService.RemoveUserFromProject(request.UserId, request.ProjectId);
             return Ok(response);
         }
-
-
-
     }
 }

@@ -3,13 +3,13 @@ using BugTracker.Models.Project;
 
 public interface IProjectService
 {
-    List<Project> GetAllProject();
-    Project GetByProjectId(string ProjectId);
-    string CreateProject(Project project);
-    Project UpdateProjectDetails(Project project, string ProjectId);
-    string DeleteProject(string ProjectId);
-    List<string> AddUserToProject(string UserId, string ProjectId);
-    List<string> RemoveUserFromProject(string UserId, string ProjectId);
+    Task<List<Project>> GetAllProject();
+    Task<Project> GetByProjectId(string ProjectId);
+    Task<string> CreateProject(Project project);
+    Task<Project> UpdateProjectDetails(Project project, string ProjectId);
+    Task<string> DeleteProject(string ProjectId);
+    Task<List<string>> AddUserToProject(string UserId, string ProjectId);
+    Task<List<string>> RemoveUserFromProject(string UserId, string ProjectId);
 
 }
 

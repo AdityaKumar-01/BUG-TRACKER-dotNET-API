@@ -1,6 +1,9 @@
-﻿namespace BugTracker.Models.Issue;
+﻿using MongoDB.Bson.Serialization.Attributes;
+
+namespace BugTracker.Models.Issue;
 public class Issue
 {
+    [BsonId]
     public string IssueId { get; set; }
     public string IssueName { get; set; }
     public string IssueDescription { get; set; }

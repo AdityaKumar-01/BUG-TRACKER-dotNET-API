@@ -1,54 +1,101 @@
 ﻿namespace BugTracker.Services.Project;
+
+using BugTracker.Models;
 using BugTracker.Models.Project;
+using Microsoft.Extensions.Options;
+using MongoDB.Bson;
+using MongoDB.Driver;
+
 public class ProjectService : IProjectService
 {
 
-    private static Dictionary<string, Project> _projects = new Dictionary<string, Project>();
-
-    public List<string> AddUserToProject(string UserId, string ProjectId)
+    private readonly IMongoCollection<Project> _projectCollection;
+    public ProjectService(IOptions<MongoDBSettings> mongoDBSettings)
     {
-        _projects[ProjectId].Contributors.Add(UserId);
-        return _projects[ProjectId].Contributors;
+        MongoClient client = new MongoClient(mongoDBSettings.Value.ConnectionString);
+        IMongoDatabase database = client.GetDatabase(mongoDBSettings.Value.DatabaseName);
+        _projectCollection = database.GetCollection<Project>(mongoDBSettings.Value.CollectionName[1]);
     }
 
-    public List<string> RemoveUserFromProject(string UserId, string ProjectId)
+ 
+    public async Task<string> CreateProject(Project project)
     {
-        var users = _projects[ProjectId].Contributors;
-        users.Remove(UserId);
-        _projects[ProjectId].Contributors = users;
-        return _projects[ProjectId].Contributors;
-    }
-    public string CreateProject(Project project)
-    {
-        _projects[project.ProjectId] = project;
-        return _projects[project.ProjectId].ProjectId;
+        try
+        {
+            await _projectCollection.InsertOneAsync(project);
+
+        }
+        catch (Exception ex)
+        {
+            return ex.Message;
+        }
+        return project.ProjectId;
     }
 
-    public string DeleteProject(string ProjectId)
+    public async Task<string> DeleteProject(string ProjectId)
     {
-        _projects.Remove(ProjectId);
+        try
+        {
+            FilterDefinition<Project> filter = Builders<Project>.Filter.Eq("ProjectId", ProjectId);
+            await _projectCollection.DeleteOneAsync(filter);
+        }
+        catch (Exception ex)
+        {
+            return ex.Message;
+        }
         return ProjectId;
     }
 
-    public List<Project> GetAllProject()
+    public async Task<List<Project>> GetAllProject()
     {
-        var response = new List<Project>(_projects.Values);
-        return response;
+        return await _projectCollection.Find(new BsonDocument()).ToListAsync();
     }
 
-    public Project GetByProjectId(string ProjectId)
+    public async Task<Project> GetByProjectId(string ProjectId)
     {
-        return _projects[ProjectId];
+        FilterDefinition<Project> filter = Builders<Project>.Filter.Eq("ProjectId", ProjectId);
+        return await _projectCollection.Find(filter).FirstOrDefaultAsync();
     }
 
-    public Project UpdateProjectDetails(Project project, string ProjectId)
+    public async Task<Project> UpdateProjectDetails(Project project, string ProjectId)
     {
-        _projects[ProjectId].Description = project.Description;
-        _projects[ProjectId].ProjectName = project.ProjectName;
-        _projects[ProjectId].Tags = project.Tags;
-        _projects[ProjectId].Version = project.Version;
-        _projects[ProjectId].UpdatedAt = project.UpdatedAt;
-        return _projects[ProjectId];
+        FilterDefinition<Project> filter = Builders<Project>.Filter.Eq("ProjectId", ProjectId);
+        UpdateDefinition<Project> update = Builders<Project>.Update
+            .Set("ProjectName", project.ProjectName)
+            .Set("Description",project.Description)
+            .Set("Tags", project.Tags)
+            .Set("Version", project.Version)
+            .Set("UpdatedAt", project.UpdatedAt);
+
+        await _projectCollection.UpdateOneAsync(filter, update);
+        var updatedProject = await _projectCollection.Find(filter).FirstOrDefaultAsync();
+
+        return updatedProject;
+    }
+    public async Task<List<string>> AddUserToProject(string UserId, string ProjectId)
+    {
+        FilterDefinition<Project> filter = Builders<Project>.Filter.Eq("ProjectId", ProjectId);
+        UpdateDefinition<Project> update = Builders<Project>.Update.AddToSet("Contributors", UserId);
+
+        await _projectCollection.UpdateOneAsync(filter, update);
+
+        var updatedProject = await _projectCollection.Find(filter).FirstOrDefaultAsync();
+        var updatedList = updatedProject.Contributors;
+        return updatedList;
+    }
+
+    public async Task<List<string>> RemoveUserFromProject(string UserId, string ProjectId)
+    {
+        FilterDefinition<Project> filter = Builders<Project>.Filter.Eq("ProjectId", ProjectId);
+        var updatedProject = await _projectCollection.Find(filter).FirstOrDefaultAsync();
+        var updatedList = updatedProject.Contributors;
+        updatedList.Remove(UserId);
+
+        UpdateDefinition<Project> update = Builders<Project>.Update.Set("Contributors", updatedList);
+
+        await _projectCollection.UpdateOneAsync(filter, update);
+
+        return updatedList;
     }
 }
 

@@ -3,10 +3,10 @@ using BugTracker.Models.User;
 
 public interface IUserService
 {
-    List<User> GetAllUser();
-    User GetByUserId(string UserId);
-    string Join(User user);
-    User UpdateUser(User user, string UserId);
-    void DeleteUser(string UserId);
+    Task<List<User>> GetAllUser();
+    Task<User> GetByUserId(string UserId);
+    Task<string> Join(User user);
+    Task<User> UpdateUser(User user, string UserId);
+    Task DeleteUser(string UserId);
 }
 

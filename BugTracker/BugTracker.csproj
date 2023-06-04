@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MongoDB.Driver" Version="2.19.2" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\BugTracker.Contracts\BugTracker.Contracts.csproj" />
   </ItemGroup>
 

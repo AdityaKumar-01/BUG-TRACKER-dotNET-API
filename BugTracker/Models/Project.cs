@@ -1,11 +1,16 @@
 ﻿namespace BugTracker.Models.Project;
+
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+
 public class Project
 {
-    public string ProjectId { get; }
+    [BsonId]
+    public string ProjectId { get; set;}
     public string ProjectName { get; set; }
     public string Description { get; set; }
     public string Version { get; set; }
-    public string OwnerId { get; }
+    public string OwnerId { get; set; }
     public string OwnerName { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
@@ -24,7 +29,7 @@ public class Project
         List<string> contributors,
         List<string> tags)
     {
-        ProjectId = projectId ?? throw new ArgumentNullException(nameof(projectId));
+        ProjectId = projectId;
         ProjectName = name ?? throw new ArgumentNullException(nameof(name));
         Description = description ?? throw new ArgumentNullException(nameof(description));
         Version = version ?? throw new ArgumentNullException(nameof(version));
@@ -35,7 +40,6 @@ public class Project
         Contributors = contributors ?? throw new ArgumentNullException(nameof(contributors));
         Tags = tags ?? throw new ArgumentNullException(nameof(tags));
     }
-
     public Project(string projectName, string description, string version, DateTime updatedAt, List<string> tags)
     {
         ProjectName = projectName;
@@ -44,5 +48,6 @@ public class Project
         UpdatedAt = updatedAt;
         Tags = tags;
     }
+
 }
 
