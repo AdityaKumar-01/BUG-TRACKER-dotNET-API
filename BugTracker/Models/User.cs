@@ -14,5 +14,9 @@ namespace BugTracker.Models.User
             this.UserId = userId;
             this.password = password;
         }
+        public User(string userId)
+        {
+            UserId= userId;
+        }
     }
 }

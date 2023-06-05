@@ -1,16 +1,37 @@
-﻿namespace BugTracker.Models
-{
-    public class ServiceResponseType<T>
-    {
-        public string StatusCode { get; set; }
-        public string StatusMessage { get; set; }
-        public T Payload { get; set; }
+﻿namespace BugTracker.Models.ServiceResponseType;
 
-        ServiceResponseType(string statusCode, string statusMessage, T payload)
+public class ServiceResponseType<T>
+{
+    public int StatusCode { get; set; }
+    public string StatusMessage { get; set; }
+    public T Payload { get; set; }
+
+    private string GetDefaultMessageForStatusCode(int statusCode)
+    {
+        return statusCode switch
         {
-            StatusCode = statusCode;
-            StatusMessage = statusMessage;
-            Payload = payload;
-        }
+            200 => "Ok",
+            201 => "Created",
+            204 => "No Content",
+            400 => "A bad request",
+            401 => "Not Authorized",
+            403 => "Forbbiden action",
+            404 => "Resource not found ",
+            500 => "Internal Servor Error",
+            502 => "Bad GateWay",
+            _ => null
+        };
+    }
+    public ServiceResponseType(int statusCode, T payload)
+    {
+        StatusCode = statusCode;
+        StatusMessage = GetDefaultMessageForStatusCode(statusCode);
+        Payload = payload;
+    }
+    public ServiceResponseType(int statusCode)
+    {
+        StatusCode = statusCode;
+        StatusMessage = GetDefaultMessageForStatusCode(statusCode);
+        Payload = default(T);
     }
 }

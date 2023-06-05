@@ -2,13 +2,13 @@
 
 using BugTracker.Models;
 using BugTracker.Models.Project;
+using BugTracker.Models.ServiceResponseType;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
 public class ProjectService : IProjectService
 {
-
     private readonly IMongoCollection<Project> _projectCollection;
     public ProjectService(IOptions<MongoDBSettings> mongoDBSettings)
     {
@@ -16,86 +16,190 @@ public class ProjectService : IProjectService
         IMongoDatabase database = client.GetDatabase(mongoDBSettings.Value.DatabaseName);
         _projectCollection = database.GetCollection<Project>(mongoDBSettings.Value.CollectionName[1]);
     }
-
- 
-    public async Task<string> CreateProject(Project project)
+    public async Task<ServiceResponseType<Project>> CreateProject(Project project)
     {
+        ServiceResponseType<Project> response;
         try
         {
             await _projectCollection.InsertOneAsync(project);
-
+            response = new ServiceResponseType<Project>(201, project);
         }
         catch (Exception ex)
         {
-            return ex.Message;
+            response = new ServiceResponseType<Project>(502);
+            return response;
         }
-        return project.ProjectId;
+        return response;
     }
-
-    public async Task<string> DeleteProject(string ProjectId)
+    public async Task<ServiceResponseType<string>> DeleteProject(string ProjectId)
     {
+        ServiceResponseType<string> response;
+
         try
         {
             FilterDefinition<Project> filter = Builders<Project>.Filter.Eq("ProjectId", ProjectId);
             await _projectCollection.DeleteOneAsync(filter);
+            response = new ServiceResponseType<string>(200);
         }
         catch (Exception ex)
         {
-            return ex.Message;
+            response = new ServiceResponseType<string>(502);
+            return response;
         }
-        return ProjectId;
+        return response;
     }
 
-    public async Task<List<Project>> GetAllProject()
+    public async Task<ServiceResponseType<List<Project>>> GetAllProject()
     {
-        return await _projectCollection.Find(new BsonDocument()).ToListAsync();
+        ServiceResponseType<List<Project>> response;
+        try
+        {
+            var result = await _projectCollection.Find(new BsonDocument()).ToListAsync();
+            if (result.Count == 0)
+            {
+                response = new ServiceResponseType<List<Project>>(204);
+            }
+            else
+            {
+                response = new ServiceResponseType<List<Project>>(200, result);
+            }
+        }
+        catch (Exception ex)
+        {
+            response = new ServiceResponseType<List<Project>>(502);
+            return response;
+        }
+
+        return response;
     }
 
-    public async Task<Project> GetByProjectId(string ProjectId)
+    public async Task<ServiceResponseType<Project>> GetByProjectId(string ProjectId)
     {
-        FilterDefinition<Project> filter = Builders<Project>.Filter.Eq("ProjectId", ProjectId);
-        return await _projectCollection.Find(filter).FirstOrDefaultAsync();
+        ServiceResponseType<Project> response;
+        try
+        {
+            FilterDefinition<Project> filter = Builders<Project>.Filter.Eq("ProjectId", ProjectId);
+            var result = await _projectCollection.Find(filter).FirstOrDefaultAsync();
+            if (result == null)
+            {
+                response = new ServiceResponseType<Project>(404);
+            }
+            else
+            {
+                response = new ServiceResponseType<Project>(200, result);
+            }
+        }
+        catch (Exception ex)
+        {
+            response = new ServiceResponseType<Project>(502);
+            return response;
+        }
+        return response;
     }
 
-    public async Task<Project> UpdateProjectDetails(Project project, string ProjectId)
+    public async Task<ServiceResponseType<Project>> UpdateProjectDetails(Project project, string ProjectId)
     {
-        FilterDefinition<Project> filter = Builders<Project>.Filter.Eq("ProjectId", ProjectId);
-        UpdateDefinition<Project> update = Builders<Project>.Update
-            .Set("ProjectName", project.ProjectName)
-            .Set("Description",project.Description)
-            .Set("Tags", project.Tags)
-            .Set("Version", project.Version)
-            .Set("UpdatedAt", project.UpdatedAt);
+        ServiceResponseType<Project> response;
 
-        await _projectCollection.UpdateOneAsync(filter, update);
-        var updatedProject = await _projectCollection.Find(filter).FirstOrDefaultAsync();
+        try
+        {
+            FilterDefinition<Project> filter = Builders<Project>.Filter.Eq("ProjectId", ProjectId);
+            UpdateDefinition<Project> update = Builders<Project>.Update
+                .Set("ProjectName", project.ProjectName)
+                .Set("Description", project.Description)
+                .Set("Tags", project.Tags)
+                .Set("Version", project.Version)
+                .Set("UpdatedAt", project.UpdatedAt);
+            var result = await _projectCollection.UpdateOneAsync(filter, update);
 
-        return updatedProject;
+
+            if (result.MatchedCount == 0)
+            {
+                response = new ServiceResponseType<Project>(404);
+            }
+            else if (result.ModifiedCount == 0)
+            {
+                response = new ServiceResponseType<Project>(502);
+            }
+            else
+            {
+                var updatedProject = await _projectCollection.Find(filter).FirstOrDefaultAsync();
+                response = new ServiceResponseType<Project>(200, updatedProject);
+            }
+        }
+        catch (Exception e)
+        {
+            response = new ServiceResponseType<Project>(502);
+            return response;
+        }
+        return response;
     }
-    public async Task<List<string>> AddUserToProject(string UserId, string ProjectId)
+    public async Task<ServiceResponseType<List<string>>> AddUserToProject(string UserId, string ProjectId)
     {
+        ServiceResponseType<List<string>> response;
+        try
+        {
         FilterDefinition<Project> filter = Builders<Project>.Filter.Eq("ProjectId", ProjectId);
         UpdateDefinition<Project> update = Builders<Project>.Update.AddToSet("Contributors", UserId);
 
-        await _projectCollection.UpdateOneAsync(filter, update);
+        var result = await _projectCollection.UpdateOneAsync(filter, update);
 
-        var updatedProject = await _projectCollection.Find(filter).FirstOrDefaultAsync();
-        var updatedList = updatedProject.Contributors;
-        return updatedList;
+            if (result.MatchedCount == 0)
+            {
+                response = new ServiceResponseType<List<string>>(404);
+            }
+            else if (result.ModifiedCount == 0)
+            {
+                response = new ServiceResponseType<List<string>>(502);
+            }
+            else
+            {
+                var updatedProject = await _projectCollection.Find(filter).FirstOrDefaultAsync();
+                var updatedList = updatedProject.Contributors;
+                response = new ServiceResponseType<List<string>>(200, updatedList);
+            }
+        }catch (Exception e)
+        {
+            response = new ServiceResponseType<List<string>>(502);
+            return response;
+        }
+        return response;
     }
 
-    public async Task<List<string>> RemoveUserFromProject(string UserId, string ProjectId)
+    public async Task<ServiceResponseType<List<string>>> RemoveUserFromProject(string UserId, string ProjectId)
     {
+        ServiceResponseType<List<string>> response;
+
+        try
+        {
         FilterDefinition<Project> filter = Builders<Project>.Filter.Eq("ProjectId", ProjectId);
-        var updatedProject = await _projectCollection.Find(filter).FirstOrDefaultAsync();
-        var updatedList = updatedProject.Contributors;
-        updatedList.Remove(UserId);
+        var requiredProject = await _projectCollection.Find(filter).FirstOrDefaultAsync();
+        if (requiredProject != null)
+            {
+                var updatedList = requiredProject.Contributors;
+                updatedList.Remove(UserId);
+                UpdateDefinition<Project> update = Builders<Project>.Update.Set("Contributors", updatedList);
+                var result = await _projectCollection.UpdateOneAsync(filter, update);
+                if(result.ModifiedCount > 0)
+                {
+                    response = new ServiceResponseType<List<string>>(200, updatedList);
+                }
+                else
+                {
+                    response = new ServiceResponseType<List<string>>(502);
+                }
+            }
+            else
+            {
+                response = new ServiceResponseType<List<string>>(404);
+            }
+        }catch(Exception e)
+        {
+            response = new ServiceResponseType<List<string>>(502);
+            return response;
+        }
 
-        UpdateDefinition<Project> update = Builders<Project>.Update.Set("Contributors", updatedList);
-
-        await _projectCollection.UpdateOneAsync(filter, update);
-
-        return updatedList;
+        return response;
     }
 }
 

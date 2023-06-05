@@ -6,6 +6,7 @@ using BugTracker.Models;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using MongoDB.Bson;
+using BugTracker.Models.ServiceResponseType;
 
 public class UserService : IUserService
 {
@@ -17,46 +18,103 @@ public class UserService : IUserService
         _userCollection = database.GetCollection<User>(mongoDBSettings.Value.CollectionName[0]);
     }
 
-    
-
-    public async Task<List<User>> GetAllUser()
+    public async Task<ServiceResponseType<List<User>>> GetAllUser()
     {
-        //var response = new List<User>(_users.Values);
-        //return response;
-        return await _userCollection.Find(new BsonDocument()).ToListAsync();
-        
+        ServiceResponseType<List<User>> response;
+        try
+        {
+            var result = await _userCollection.Find(new BsonDocument()).ToListAsync();
+            if (result.Count == 0)
+            {
+                response = new ServiceResponseType<List<User>>(204);
+            }
+            else
+            {
+                response = new ServiceResponseType<List<User>>(200, result);
+            }
+        }
+        catch (Exception ex)
+        {
+            response = new ServiceResponseType<List<User>>(502);
+            return response;
+        }
+        return response;
+
     }
 
-    public async Task<User> GetByUserId(string UserId)
+    public async Task<ServiceResponseType<User>> GetByUserId(string UserId)
     {
-        FilterDefinition<User> filterDefinition = Builders<User>.Filter.Eq("UserId",UserId);
-        return await _userCollection.Find(filterDefinition).FirstOrDefaultAsync();
+        ServiceResponseType<User> response;
+        try
+        {
+            FilterDefinition<User> filterDefinition = Builders<User>.Filter.Eq("UserId", UserId);
+            var result = await _userCollection.Find(filterDefinition).FirstOrDefaultAsync();
+            if (result == null)
+            {
+                response = new ServiceResponseType<User>(404);
+            }
+            else
+            {
+                response = new ServiceResponseType<User>(200, result);
+            }
+        }
+        catch (Exception ex)
+        {
+            response = new ServiceResponseType<User>(502);
+        }
+        return response;
     }
 
-    public async Task<string> Join(User user)
+    public async Task<ServiceResponseType<User>> Join(User user)
     {
+        ServiceResponseType<User> response;
         try
         {
             await _userCollection.InsertOneAsync(user);
-        }catch (Exception ex)
-        {
-            return ex.Message;
+            var data = new User(user.UserId);
+            response = new ServiceResponseType<User>(201, data);
         }
-        return user.UserId;
-    }
-    public async Task<User> UpdateUser(User user, string UserId)
-    {
-        FilterDefinition<User> filter = Builders<User>.Filter.Eq("UserId",UserId);
-        UpdateDefinition<User> update = Builders<User>.Update.Set("UserId",user.UserId).Set("password",user.password);
-        await _userCollection.UpdateOneAsync(filter,update);
-        filter = Builders<User>.Filter.Eq("UserId", user.UserId);
-        var response= await _userCollection.Find(filter).FirstOrDefaultAsync();
+        catch (Exception ex)
+        {
+            response = new ServiceResponseType<User>(502);
+            return response;
+        }
         return response;
     }
-    public async Task DeleteUser(string UserId)
+    public async Task<ServiceResponseType<User>> UpdateUser(User user, string UserId)
     {
-        FilterDefinition<User> filter = Builders<User>.Filter.Eq("UserId", UserId);
-        await _userCollection.DeleteOneAsync(filter);
+        ServiceResponseType<User> response;
+        try
+        {
+            FilterDefinition<User> filter = Builders<User>.Filter.Eq("UserId", UserId);
+            UpdateDefinition<User> update = Builders<User>.Update.Set("UserId", user.UserId).Set("password", user.password);
+            await _userCollection.UpdateOneAsync(filter, update);
+            filter = Builders<User>.Filter.Eq("UserId", user.UserId);
+            var result = await _userCollection.Find(filter).FirstOrDefaultAsync();
+            response = new ServiceResponseType<User>(200, result);
+
+        }
+        catch (Exception ex)
+        {
+            response = new ServiceResponseType<User>(502);
+            return response;
+        }
+        return response;
+    }
+    public async Task<ServiceResponseType<User>> DeleteUser(string UserId)
+    {
+        ServiceResponseType<User> response;
+        try
+        {
+            FilterDefinition<User> filter = Builders<User>.Filter.Eq("UserId", UserId);
+            await _userCollection.DeleteOneAsync(filter);
+            response = new ServiceResponseType<User>(204);
+        }catch(Exception ex)
+        {
+            response = new ServiceResponseType<User>(502);
+            return response;
+        }
+        return response;
     }
 }
 

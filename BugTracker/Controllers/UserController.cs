@@ -1,71 +1,66 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿namespace BugTracker.Controllers;
+using Microsoft.AspNetCore.Mvc;
 using BugTracker.Models.User;
 using BugTracker.Services.User;
 using BugTracker.Contracts.UserContracts;
-namespace BugTracker.Controllers
+using BugTracker.Models.ServiceResponseType;
+
+
+[ApiController]
+[Route("api/v2/[controller]")]
+public class UserController : HelperAndBaseController
 {
-    [ApiController]
-    [Route("api/v1/[controller]")]
-    public class UserController : ControllerBase
+    private readonly IUserService _userService;
+    
+    public UserController(IUserService userService)
     {
-        private readonly IUserService _userService;
+        _userService = userService;
+    }
+    
+    // GET: api/v1/User
+    [HttpGet]
+    public async Task<IActionResult> GetAllUser()
+    {
+        ServiceResponseType<List<User>> response = await _userService.GetAllUser();
+        return ControllerResponse(response.StatusCode, response.Payload);
+    }
 
-        public UserController(IUserService userService)
-        {
-            _userService = userService;
-        }
-        private static Random random = new Random();
-        public static string RandomString()
-        {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            return new string(Enumerable.Repeat(chars, 24)
-                .Select(s => s[random.Next(s.Length)]).ToArray());
-        }
-        // GET: api/v1/User
-        [HttpGet]
-        public Task<List<User>> GetAllUser()
-        {
-            return _userService.GetAllUser();
-        }
+    // GET: api/v1/User/:UserId
+    [HttpGet("{UserId}")]
+    public async Task<IActionResult> GetByUserId(string UserId)
+    {
+        ServiceResponseType<User> response = await _userService.GetByUserId(UserId);
 
-        // GET: api/v1/User/:UserId
-        [HttpGet("{UserId}")]
-        public async Task<IActionResult> GetByUserId(string UserId)
-        {
-            var response = await _userService.GetByUserId(UserId);
+        return ControllerResponse(response.StatusCode, response.Payload);
+    }
 
-            return Ok(response);
-        }
+    // POST: api/v1/User
+    [HttpPost]
+    public async Task<IActionResult> Join(JoinUserRequest request)
+    {
+        var user = new User(RandomString(), request.password);
+        ServiceResponseType<User> response = await _userService.Join(user);
+        return ControllerResponse(response.StatusCode, response.Payload, nameof(Join), user.UserId);
+    }
 
-        // POST: api/v1/User
-        [HttpPost]
-        public async Task<IActionResult> Join(JoinUserRequest request)
-        {
-            var user = new User(RandomString(), request.password);
-            var response = await _userService.Join(user);
+    // PUT: api/v1/User/
+    [HttpPut]
+    public async Task<IActionResult> UpdateUser(UpsertUserRequest request)
+    {
+        var user = new User(request.UserId, request.password);
 
-            return CreatedAtAction(nameof(Join), new {id= request.UserId}, response);
-        }
+        ServiceResponseType<User> response = await _userService.UpdateUser(user, user.UserId);
 
-        // PUT: api/v1/User/
-        [HttpPut]
-        public async Task<IActionResult> UpdateUser(UpsertUserRequest request)
-        {
-            var user = new User(request.UserId, request.password);
+        return ControllerResponse(response.StatusCode, response.Payload);
+    }
 
-            var response = await _userService.UpdateUser(user, user.UserId);
-
-            return Ok(response);
-        }
-
-        // DELETE: api/v1/User
-        [HttpDelete("{UserId}")]
-        public IActionResult DeleteUser(string UserId)
-        {
-            _userService.DeleteUser(UserId);
-            return Ok();
-
-        }
+    // DELETE: api/v1/User
+    [HttpDelete("{UserId}")]
+    public async Task<IActionResult> DeleteUser(string UserId)
+    {
+        ServiceResponseType<User> response = await _userService.DeleteUser(UserId);
+        return ControllerResponse(response.StatusCode, response.Payload);
 
     }
+
 }
