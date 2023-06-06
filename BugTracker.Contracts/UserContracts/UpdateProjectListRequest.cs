@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace BugTracker.Contracts.UserContracts
 {
-    public record UpsertUserRequest
+    public record UpdateProjectListRequest
     (
-        string UserId,
-        string password
-    );
+     string UserId,
+     string ProjectId
+      );
 }

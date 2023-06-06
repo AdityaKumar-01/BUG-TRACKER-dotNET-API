@@ -6,7 +6,7 @@ public class ServiceResponseType<T>
     public string StatusMessage { get; set; }
     public T Payload { get; set; }
 
-    private string GetDefaultMessageForStatusCode(int statusCode)
+    private string GetDefaultMessageForStatusCode(int statusCode, string message = "")
     {
         return statusCode switch
         {
@@ -18,20 +18,20 @@ public class ServiceResponseType<T>
             403 => "Forbbiden action",
             404 => "Resource not found ",
             500 => "Internal Servor Error",
-            502 => "Bad GateWay",
+            502 => "Bad Gateway",
             _ => null
         };
     }
-    public ServiceResponseType(int statusCode, T payload)
+    public ServiceResponseType(int statusCode, T payload, string message = "")
     {
         StatusCode = statusCode;
-        StatusMessage = GetDefaultMessageForStatusCode(statusCode);
+        StatusMessage = message == "" ? GetDefaultMessageForStatusCode(statusCode) : message;
         Payload = payload;
     }
-    public ServiceResponseType(int statusCode)
+    public ServiceResponseType(int statusCode, string message = "")
     {
         StatusCode = statusCode;
-        StatusMessage = GetDefaultMessageForStatusCode(statusCode);
+        StatusMessage = message == "" ? GetDefaultMessageForStatusCode(statusCode) : message;
         Payload = default(T);
     }
 }

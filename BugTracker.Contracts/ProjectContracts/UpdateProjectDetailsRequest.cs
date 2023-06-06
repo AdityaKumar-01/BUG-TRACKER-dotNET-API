@@ -8,7 +8,7 @@ namespace BugTracker.Contracts.ProjectContracts
 {
     public record UpdateProjectDetailsRequest
    (
-        string ProjectName,
+        string Name,
         string Description,
         string Version,
         DateTime UpdatedAt,

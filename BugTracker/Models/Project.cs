@@ -7,14 +7,15 @@ public class Project
 {
     [BsonId]
     public string ProjectId { get; set;}
-    public string ProjectName { get; set; }
+    public string Name { get; set; }
     public string Description { get; set; }
     public string Version { get; set; }
     public string OwnerId { get; set; }
     public string OwnerName { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    public List<string> Contributors { get; set; }
+    public Dictionary<string, Dictionary<string, string>> Contributors { get; set; }
+    public List<string> HasIssue { get; set; }
     public List<string> Tags { get; set; }
 
     public Project(
@@ -26,11 +27,12 @@ public class Project
         string ownerName,
         DateTime createdAt,
         DateTime updatedAt,
-        List<string> contributors,
+        Dictionary<string, Dictionary<string, string>> contributors,
+        List<string> hasIssue,
         List<string> tags)
     {
         ProjectId = projectId;
-        ProjectName = name ?? throw new ArgumentNullException(nameof(name));
+        Name = name ?? throw new ArgumentNullException(nameof(name));
         Description = description ?? throw new ArgumentNullException(nameof(description));
         Version = version ?? throw new ArgumentNullException(nameof(version));
         OwnerId = ownerId ?? throw new ArgumentNullException(nameof(ownerId));
@@ -38,11 +40,12 @@ public class Project
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
         Contributors = contributors ?? throw new ArgumentNullException(nameof(contributors));
+        HasIssue = hasIssue;
         Tags = tags ?? throw new ArgumentNullException(nameof(tags));
     }
     public Project(string projectName, string description, string version, DateTime updatedAt, List<string> tags)
     {
-        ProjectName = projectName;
+        Name = projectName;
         Description = description;
         Version = version;
         UpdatedAt = updatedAt;

@@ -6,11 +6,9 @@ using System.Threading.Tasks;
 
 namespace BugTracker.Contracts.UserContracts
 {
-    public record JoinUserRequest
+    public record UpdateIssueListRequest
     (
-        string Name,
-        string Password,
-        List<string> ContributorOfProject,
-        List<string> AssignedIssue
-    );
+        string UserId,
+        string IssueId
+        );
 }

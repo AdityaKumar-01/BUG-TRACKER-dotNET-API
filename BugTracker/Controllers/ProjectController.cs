@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using BugTracker.Models.Project;
 using BugTracker.Contracts.ProjectContracts;
 using BugTracker.Models.ServiceResponseType;
+using Amazon.Runtime.Internal;
 
 namespace BugTracker.Controllers
 {
@@ -39,7 +40,7 @@ namespace BugTracker.Controllers
             var ProjectId = RandomString();
             var project = new Project(
                 ProjectId,
-                request.ProjectName,
+                request.Name,
                 request.Description,
                 request.Version,
                 request.OwnerId,
@@ -47,6 +48,7 @@ namespace BugTracker.Controllers
                 request.CreatedAt,
                 request.UpdatedAt,
                 request.Contributors,
+                request.HasIssue,
                 request.Tags);
             ServiceResponseType<Project> response = await _projectService.CreateProject(project);
 
@@ -58,7 +60,7 @@ namespace BugTracker.Controllers
         public async Task<IActionResult> UpdateProjectDetails(UpdateProjectDetailsRequest request, string ProjectId)
         {
             var project = new Project(
-                request.ProjectName,
+                request.Name,
                 request.Description,
                 request.Version,
                 request.UpdatedAt,
@@ -68,28 +70,48 @@ namespace BugTracker.Controllers
             return ControllerResponse(response.StatusCode, response.Payload);
         }
 
+        //PUT api/v1/<ProjectController>/add-contributor
+        [HttpPatch("api/v2/project/add-contributor")]
+        public async Task<IActionResult> AddContributor(AddContributorRequest request)
+        {
+            Dictionary<string, string> updatePayload = new Dictionary<string, string>();
+            updatePayload["Name"] = request.UserName;
+            updatePayload["Role"] = request.Role;
+            ServiceResponseType<List<string>> response = await _projectService.AddUserToProject(request.UserId, request.ProjectId, updatePayload);
+            return ControllerResponse(response.StatusCode, response.Payload);
+        }
+
+        //PUT api/v1/<ProjectController>/remove-contributor
+        [HttpPatch("api/v2/project/remove-contributor")]
+        public async Task<IActionResult> RemoveContributor(RemoveContributorFromProjectRequest request)
+        {
+            ServiceResponseType<List<string>> response = await _projectService.RemoveUserFromProject(request.UserId, request.ProjectId);
+            return ControllerResponse(response.StatusCode, response.Payload);
+        }
+
+        //PUT api/v1/<ProjectController>/add-issue
+        [HttpPatch("api/v2/project/add-issue")]
+        public async Task<IActionResult> AddIssue(UpdateIssueInProjectRequest request)
+
+        {
+            ServiceResponseType<List<string>> response = await _projectService.AddIssueToProject(request.IssueId, request.ProjectId);
+            return ControllerResponse(response.StatusCode, response.Payload);
+        }
+
+        //PUT api/v1/<ProjectController>/remove-issue
+        [HttpPatch("api/v2/project/remove-issue")]
+        public async Task<IActionResult> RemoveIssue(UpdateIssueInProjectRequest request)
+        {
+            ServiceResponseType<List<string>> response = await _projectService.RemoveIssueFromProject(request.IssueId, request.ProjectId);
+            return ControllerResponse(response.StatusCode, response.Payload);
+        }
         // DELETE api/<ProjectController>/5
+        
         [HttpDelete("api/v2/project/{ProjectId}")]
         public async Task<IActionResult> DeleteProject(string ProjectId)
         {
             ServiceResponseType<string> response = await _projectService.DeleteProject(ProjectId);
 
-            return ControllerResponse(response.StatusCode, response.Payload);
-        }
-
-        //PUT api/v1/<ProjectController>/addcontributor
-        [HttpPatch("api/v2/project/addcontributor")]
-        public async Task<IActionResult> AddContributor(UpdateContributorsRequest request)
-        {
-            ServiceResponseType<List<string>> response = await _projectService.AddUserToProject(request.UserId, request.ProjectId);
-            return ControllerResponse(response.StatusCode, response.Payload);
-        }
-
-        //PUT api/v1/<ProjectController>/removecontributor
-        [HttpPatch("api/v2/project/removecontributor")]
-        public async Task<IActionResult> RemoveContributor(UpdateContributorsRequest request)
-        {
-            ServiceResponseType<List<string>> response = await _projectService.RemoveUserFromProject(request.UserId, request.ProjectId);
             return ControllerResponse(response.StatusCode, response.Payload);
         }
     }
