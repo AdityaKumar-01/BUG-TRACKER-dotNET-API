@@ -11,5 +11,5 @@ public interface IIssueService
     Task<ServiceResponseType<List<Issue>>> GetAllIssue();
     Task<ServiceResponseType<Issue>> GetByIssueId(string IssueId);
     Task<ServiceResponseType<Issue>> UpdateIssueDetails(Issue issue, string IssueId);
-
+    Task<ServiceResponseType<string>> TransferIssue(string IssueId, string ToPojectId);
 }

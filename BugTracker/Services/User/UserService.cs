@@ -7,6 +7,8 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using MongoDB.Bson;
 using BugTracker.Models.ServiceResponseType;
+using System.Text;
+using Tweetinvi.Security;
 
 public class UserService : IUserService
 {
@@ -17,18 +19,66 @@ public class UserService : IUserService
         IMongoDatabase database = client.GetDatabase(mongoDBSettings.Value.DatabaseName);
         _userCollection = database.GetCollection<User>(mongoDBSettings.Value.CollectionName[0]);
     }
-    public async Task<ServiceResponseType<User>> Join(User user)
+
+    public static string Hashing(string pwd)
+    {
+        var data = Encoding.ASCII.GetBytes(pwd);
+        var sha1 = new SHA1CryptoServiceProvider();
+        var sha1data = sha1.ComputeHash(data);
+        ASCIIEncoding ascii = new ASCIIEncoding();
+        var hashedPassword = ascii.GetString(sha1data);
+        return hashedPassword;
+    }
+    
+    public async Task<ServiceResponseType<User>> SignUp(User user)
     {
         ServiceResponseType<User> response;
         try
         {
-            await _userCollection.InsertOneAsync(user);
-            var data = new User(user.UserId, user.Name, user.ContributorOfProject, user.AssginedIssue);
-            response = new ServiceResponseType<User>(201, data);
+            FilterDefinition<User> filter = Builders<User>.Filter.Eq("Email", user.Email);
+            var result = await _userCollection.Find(filter).FirstOrDefaultAsync();
+            if (result == null)
+            {
+                await _userCollection.InsertOneAsync(user);
+                response = new ServiceResponseType<User>(201, user);
+            }
+            else
+            {
+                response = new ServiceResponseType<User>(409, user, "User Exist");
+            }
+
         }
         catch (Exception ex)
-        {   
-            response = new ServiceResponseType<User>(502,ex.Message);
+        {
+            response = new ServiceResponseType<User>(502, ex.Message);
+        }
+        return response;
+    }
+
+    public async Task<ServiceResponseType<User>> SignIn(string email, string password)
+    {
+        ServiceResponseType<User> response;
+        try
+        {
+            FilterDefinition<User> filter = Builders<User>.Filter.Eq("Email", email);
+            var result = await _userCollection.Find(filter).FirstOrDefaultAsync();
+            if (result == null)
+            {
+                response = new ServiceResponseType<User>(404);
+            }
+            else if (result.Password != Hashing(password))
+            {
+                response = new ServiceResponseType<User>(401);
+            }
+            else
+            {
+                response = new ServiceResponseType<User>(200, email);
+            }
+
+        }
+        catch (Exception ex)
+        {
+            response = new ServiceResponseType<User>(502, ex.Message);
         }
         return response;
     }
@@ -127,7 +177,7 @@ public class UserService : IUserService
         }
         catch (Exception e)
         {
-            response = new ServiceResponseType<List<string>>(502,e.Message);
+            response = new ServiceResponseType<List<string>>(502, e.Message);
         }
         return response;
     }
@@ -167,16 +217,16 @@ public class UserService : IUserService
 
         return response;
     }
-    
+
     public async Task<ServiceResponseType<List<string>>> AddIdToIssueList(string UserId, string IssueId)
     {
         ServiceResponseType<List<string>> response;
         try
         {
-        FilterDefinition<User> filter = Builders<User>.Filter.Eq("UserId", UserId);
-        UpdateDefinition<User> update = Builders<User>.Update.AddToSet("AssginedIssue", IssueId);
+            FilterDefinition<User> filter = Builders<User>.Filter.Eq("UserId", UserId);
+            UpdateDefinition<User> update = Builders<User>.Update.AddToSet("AssginedIssue", IssueId);
 
-        var result = await _userCollection.UpdateOneAsync(filter, update);
+            var result = await _userCollection.UpdateOneAsync(filter, update);
 
             if (result.MatchedCount == 0)
             {
@@ -188,9 +238,10 @@ public class UserService : IUserService
                 var updatedList = updatedUser.AssginedIssue;
                 response = new ServiceResponseType<List<string>>(200, updatedList);
             }
-        }catch (Exception e)
+        }
+        catch (Exception e)
         {
-            response = new ServiceResponseType<List<string>>(502,e.Message);
+            response = new ServiceResponseType<List<string>>(502, e.Message);
         }
         return response;
     }
@@ -201,15 +252,15 @@ public class UserService : IUserService
 
         try
         {
-        FilterDefinition<User> filter = Builders<User>.Filter.Eq("UserId", UserId);
-        var requiredProject = await _userCollection.Find(filter).FirstOrDefaultAsync();
-        if (requiredProject != null)
+            FilterDefinition<User> filter = Builders<User>.Filter.Eq("UserId", UserId);
+            var requiredProject = await _userCollection.Find(filter).FirstOrDefaultAsync();
+            if (requiredProject != null)
             {
                 var updatedList = requiredProject.AssginedIssue;
                 updatedList.Remove(IssueId);
                 UpdateDefinition<User> update = Builders<User>.Update.Set("AssginedIssue", updatedList);
                 var result = await _userCollection.UpdateOneAsync(filter, update);
-                if(result.ModifiedCount > 0)
+                if (result.ModifiedCount > 0)
                 {
                     response = new ServiceResponseType<List<string>>(200, updatedList);
                 }
@@ -222,14 +273,15 @@ public class UserService : IUserService
             {
                 response = new ServiceResponseType<List<string>>(404);
             }
-        }catch(Exception e)
+        }
+        catch (Exception e)
         {
             response = new ServiceResponseType<List<string>>(502, e.Message);
         }
 
         return response;
     }
-   
+
     public async Task<ServiceResponseType<User>> DeleteUser(string UserId)
     {
         ServiceResponseType<User> response;
@@ -238,7 +290,8 @@ public class UserService : IUserService
             FilterDefinition<User> filter = Builders<User>.Filter.Eq("UserId", UserId);
             await _userCollection.DeleteOneAsync(filter);
             response = new ServiceResponseType<User>(204);
-        }catch(Exception ex)
+        }
+        catch (Exception ex)
         {
             response = new ServiceResponseType<User>(502, ex.Message);
         }

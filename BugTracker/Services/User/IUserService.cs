@@ -5,7 +5,8 @@ using BugTracker.Models.User;
 
 public interface IUserService
 {
-    Task<ServiceResponseType<User>> Join(User user);
+    Task<ServiceResponseType<User>> SignUp(User user);
+    Task<ServiceResponseType<User>> SignIn(string Email, string Password);
     Task<ServiceResponseType<List<User>>> GetAllUser();
     Task<ServiceResponseType<User>> GetByUserId(string UserId);
     Task<ServiceResponseType<User>> UpdateUserDetails(User user, string UserId);

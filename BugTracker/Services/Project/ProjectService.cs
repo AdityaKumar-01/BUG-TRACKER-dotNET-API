@@ -114,9 +114,9 @@ public class ProjectService : IProjectService
         return response;
     }
 
-    public async Task<ServiceResponseType<List<string>>> AddUserToProject(string UserId, string ProjectId, Dictionary<string, string> updatePayload)
+    public async Task<ServiceResponseType<Dictionary<string, Dictionary<string, string>>>> AddUserToProject(string UserId, string ProjectId, Dictionary<string, string> updatePayload)
     {
-        ServiceResponseType<List<string>> response;
+        ServiceResponseType<Dictionary<string, Dictionary<string, string>>> response;
         try
         {
             FilterDefinition<Project> filter = Builders<Project>.Filter.Eq("ProjectId", ProjectId);
@@ -129,27 +129,27 @@ public class ProjectService : IProjectService
 
             if (result.MatchedCount == 0)
             {
-                response = new ServiceResponseType<List<string>>(404);
+                response = new ServiceResponseType<Dictionary<string, Dictionary<string, string>>>(404);
             }
             else if (result.ModifiedCount == 0)
             {
-                response = new ServiceResponseType<List<string>>(502);
+                response = new ServiceResponseType<Dictionary<string, Dictionary<string, string>>>(502);
             }
             else
             {
-                response = new ServiceResponseType<List<string>>(200, ContributorDictionary.Keys.ToList());
+                response = new ServiceResponseType<Dictionary<string, Dictionary<string, string>>>(200, ContributorDictionary);
             }
         }
         catch (Exception ex)
         {
-            response = new ServiceResponseType<List<string>>(502, ex.Message);
+            response = new ServiceResponseType<Dictionary<string, Dictionary<string, string>>>(502, ex.Message);
         }
         return response;
     }
 
-    public async Task<ServiceResponseType<List<string>>> RemoveUserFromProject(string UserId, string ProjectId)
+    public async Task<ServiceResponseType<Dictionary<string, Dictionary<string, string>>>> RemoveUserFromProject(string UserId, string ProjectId)
     {
-        ServiceResponseType<List<string>> response;
+        ServiceResponseType<Dictionary<string, Dictionary<string, string>>> response;
 
         try
         {
@@ -164,21 +164,21 @@ public class ProjectService : IProjectService
                 var result = await _projectCollection.UpdateOneAsync(filter, update);
                 if (result.IsAcknowledged == false)
                 {
-                    response = new ServiceResponseType<List<string>>(502);
+                    response = new ServiceResponseType<Dictionary<string, Dictionary<string, string>>>(502);
                 }
                 else
                 {
-                    response = new ServiceResponseType<List<string>>(200, new List<string>(updatedList));
+                    response = new ServiceResponseType<Dictionary<string, Dictionary<string, string>>>(200, updatedAttribute);
                 }
             }
             else
             {
-                response = new ServiceResponseType<List<string>>(404);
+                response = new ServiceResponseType<Dictionary<string, Dictionary<string, string>>>(404);
             }
         }
         catch (Exception ex)
         {
-            response = new ServiceResponseType<List<string>>(502, ex.Message);
+            response = new ServiceResponseType<Dictionary<string, Dictionary<string, string>>>(502, ex.Message);
         }
 
         return response;

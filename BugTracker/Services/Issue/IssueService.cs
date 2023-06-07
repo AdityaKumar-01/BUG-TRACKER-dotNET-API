@@ -16,75 +16,6 @@ public class IssueService : IIssueService
         IMongoDatabase database = client.GetDatabase(mongoDBSettings.Value.DatabaseName);
         _issueCollection = database.GetCollection<Issue>(mongoDBSettings.Value.CollectionName[2]);
     }
-    public async Task<ServiceResponseType<List<string>>> AddUserToIssue(string UserId, string IssueId)
-    {
-        ServiceResponseType<List<string>> response;
-        try
-        {
-            FilterDefinition<Issue> filter = Builders<Issue>.Filter.Eq("IssueId", IssueId);
-            UpdateDefinition<Issue> update = Builders<Issue>.Update.AddToSet("AssignedTo", UserId);
-
-            var result = await _issueCollection.UpdateOneAsync(filter, update);
-
-            if (result.MatchedCount == 0)
-            {
-                response = new ServiceResponseType<List<string>>(404);
-            }
-            else if (result.ModifiedCount == 0)
-            {
-                response = new ServiceResponseType<List<string>>(502);
-            }
-            else
-            {
-                var updatedIssue = await _issueCollection.Find(filter).FirstOrDefaultAsync();
-                var updatedList = updatedIssue.AssignedTo;
-                response = new ServiceResponseType<List<string>>(200, updatedList);
-            }
-        }
-        catch (Exception e)
-        {
-            response = new ServiceResponseType<List<string>>(502);
-            return response;
-        }
-        return response;
-    }
-
-    public async Task<ServiceResponseType<List<string>>> RemoveUserFromIssue(string UserId, string IssueId)
-    {
-        ServiceResponseType<List<string>> response;
-
-        try
-        {
-            FilterDefinition<Issue> filter = Builders<Issue>.Filter.Eq("IssueId", IssueId);
-            var requiredIssue = await _issueCollection.Find(filter).FirstOrDefaultAsync();
-            if (requiredIssue != null)
-            {
-                var updatedList = requiredIssue.AssignedTo;
-                updatedList.Remove(UserId);
-                UpdateDefinition<Issue> update = Builders<Issue>.Update.Set("AssignedTo", updatedList);
-                var result = await _issueCollection.UpdateOneAsync(filter, update);
-                if (result.ModifiedCount > 0)
-                {
-                    response = new ServiceResponseType<List<string>>(200, updatedList);
-                }
-                else
-                {
-                    response = new ServiceResponseType<List<string>>(502);
-                }
-            }
-            else
-            {
-                response = new ServiceResponseType<List<string>>(404);
-            }
-        }
-        catch (Exception e)
-        {
-            response = new ServiceResponseType<List<string>>(502);
-            return response;
-        }
-
-        return response;
-    }
     public async Task<ServiceResponseType<Issue>> CreateIssue(Issue issue)
     {
         ServiceResponseType<Issue> response;
@@ -95,25 +26,7 @@ public class IssueService : IIssueService
         }
         catch (Exception ex)
         {
-            response = new ServiceResponseType<Issue>(502);
-            return response;
-        }
-        return response;
-    }
-
-    public async Task<ServiceResponseType<string>> DeleteIssue(string IssueId)
-    {
-        ServiceResponseType<string> response;
-
-        try
-        {
-            FilterDefinition<Issue> filter = Builders<Issue>.Filter.Eq("IssueId", IssueId);
-            await _issueCollection.DeleteOneAsync(filter);
-            response = new ServiceResponseType<string>(200);
-        }
-        catch (Exception ex)
-        {
-            response = new ServiceResponseType<string>(502);
+            response = new ServiceResponseType<Issue>(502, ex.Message);
             return response;
         }
         return response;
@@ -136,7 +49,8 @@ public class IssueService : IIssueService
         }
         catch (Exception ex)
         {
-            response = new ServiceResponseType<List<Issue>>(502);
+            Console.WriteLine(ex.Message);
+            response = new ServiceResponseType<List<Issue>>(404, ex.Message);
             return response;
         }
 
@@ -161,7 +75,7 @@ public class IssueService : IIssueService
         }
         catch (Exception ex)
         {
-            response = new ServiceResponseType<Issue>(502);
+            response = new ServiceResponseType<Issue>(502, ex.Message);
             return response;
         }
         return response;
@@ -175,20 +89,18 @@ public class IssueService : IIssueService
         {
             FilterDefinition<Issue> filter = Builders<Issue>.Filter.Eq("IssueId", IssueId);
             UpdateDefinition<Issue> update = Builders<Issue>.Update
-                .Set("IssueName", issue.IssueName)
-                .Set("IssueDescription", issue.IssueDescription)
-                .Set("IssueType", issue.IssueType)
+                .Set("Name", issue.Name)
+                .Set("Description", issue.Description)
+                .Set("Type", issue.Type)
                 .Set("UpdatedAt", issue.UpdatedAt);
 
             var result = await _issueCollection.UpdateOneAsync(filter, update);
-           
-
 
             if (result.MatchedCount == 0)
             {
                 response = new ServiceResponseType<Issue>(404);
             }
-            else if (result.ModifiedCount == 0)
+            else if (result.IsAcknowledged == false)
             {
                 response = new ServiceResponseType<Issue>(502);
             }
@@ -200,7 +112,121 @@ public class IssueService : IIssueService
         }
         catch (Exception e)
         {
-            response = new ServiceResponseType<Issue>(502);
+            response = new ServiceResponseType<Issue>(502, e.Message);
+            return response;
+        }
+        return response;
+    }
+
+    public async Task<ServiceResponseType<List<string>>> AddUserToIssue(string UserId, string IssueId)
+    {
+        ServiceResponseType<List<string>> response;
+        try
+        {
+            FilterDefinition<Issue> filter = Builders<Issue>.Filter.Eq("IssueId", IssueId);
+            UpdateDefinition<Issue> update = Builders<Issue>.Update.AddToSet("AssignedTo", UserId);
+
+            var result = await _issueCollection.UpdateOneAsync(filter, update);
+
+            if (result.MatchedCount == 0)
+            {
+                response = new ServiceResponseType<List<string>>(404);
+            }
+            else if (result.IsAcknowledged == false)
+            {
+                response = new ServiceResponseType<List<string>>(502);
+            }
+            else
+            {
+                var updatedIssue = await _issueCollection.Find(filter).FirstOrDefaultAsync();
+                var updatedList = updatedIssue.AssignedTo;
+                response = new ServiceResponseType<List<string>>(200, updatedList);
+            }
+        }
+        catch (Exception e)
+        {
+            response = new ServiceResponseType<List<string>>(502, e.Message);
+            return response;
+        }
+        return response;
+    }
+
+    public async Task<ServiceResponseType<List<string>>> RemoveUserFromIssue(string UserId, string IssueId)
+    {
+        ServiceResponseType<List<string>> response;
+
+        try
+        {
+            FilterDefinition<Issue> filter = Builders<Issue>.Filter.Eq("IssueId", IssueId);
+            var requiredIssue = await _issueCollection.Find(filter).FirstOrDefaultAsync();
+            if (requiredIssue != null)
+            {
+                var updatedList = requiredIssue.AssignedTo;
+                updatedList.Remove(UserId);
+                UpdateDefinition<Issue> update = Builders<Issue>.Update.Set("AssignedTo", updatedList);
+                var result = await _issueCollection.UpdateOneAsync(filter, update);
+                if (result.IsAcknowledged == false)
+                {
+                    response = new ServiceResponseType<List<string>>(502);
+                }
+                else
+                {
+                    response = new ServiceResponseType<List<string>>(200, updatedList);
+                }
+            }
+            else
+            {
+                response = new ServiceResponseType<List<string>>(404);
+            }
+        }
+        catch (Exception e)
+        {
+            response = new ServiceResponseType<List<string>>(502, e.Message);
+            return response;
+        }
+
+        return response;
+    }
+
+    public async Task<ServiceResponseType<string>> TransferIssue(string IssueId, string ToPojectId)
+    {
+        ServiceResponseType<string> response;
+        try
+        {
+            FilterDefinition<Issue> filter = Builders<Issue>.Filter.Eq("IssueId", IssueId);
+            UpdateDefinition<Issue> update = Builders<Issue>.Update.Set("BelongsToProject", ToPojectId);
+
+            var result = await _issueCollection.UpdateOneAsync(filter, update);
+            if (result.IsAcknowledged == false)
+            {
+                response = new ServiceResponseType<string>(502);
+            }
+            else
+            {
+                response = new ServiceResponseType<string>(200, ToPojectId);
+            }
+        }
+        catch (Exception e)
+        {
+            response = new ServiceResponseType<string>(502, e.Message);
+        }
+
+        return response;
+    }
+    
+    public async Task<ServiceResponseType<string>> DeleteIssue(string IssueId)
+    {
+        ServiceResponseType<string> response;
+
+        try
+        {
+            FilterDefinition<Issue> filter = Builders<Issue>.Filter.Eq("IssueId", IssueId);
+            await _issueCollection.DeleteOneAsync(filter);
+            response = new ServiceResponseType<string>(200);
+        }
+        catch (Exception ex)
+        {
+            response = new ServiceResponseType<string>(502, ex.Message);
             return response;
         }
         return response;

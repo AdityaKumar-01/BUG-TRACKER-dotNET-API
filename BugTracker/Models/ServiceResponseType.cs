@@ -18,7 +18,7 @@ public class ServiceResponseType<T>
             403 => "Forbbiden action",
             404 => "Resource not found ",
             500 => "Internal Servor Error",
-            502 => "Bad Gateway",
+            502 => message,
             _ => null
         };
     }

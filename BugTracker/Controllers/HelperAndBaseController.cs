@@ -14,8 +14,6 @@ namespace BugTracker.Controllers
         }
         public IActionResult ControllerResponse<T>(int statusCode, T payload, string name = "", string id = "")
         {
-
-
             if (statusCode == 200)
             {
                 return Ok(payload);
@@ -32,9 +30,15 @@ namespace BugTracker.Controllers
             {
                 return NotFound();
             }
-            else
+            else if(statusCode == 502)
             {
                 return StatusCode(502, "Bad Gateway");
+            }else if(statusCode == 409)
+            {
+                return StatusCode(409, "Conflict with requested data");
+            }else if (statusCode == 401)
+            {
+                return StatusCode(401, "User is unauthorized");
             }
         }
     }

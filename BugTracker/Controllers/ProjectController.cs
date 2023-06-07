@@ -77,7 +77,7 @@ namespace BugTracker.Controllers
             Dictionary<string, string> updatePayload = new Dictionary<string, string>();
             updatePayload["Name"] = request.UserName;
             updatePayload["Role"] = request.Role;
-            ServiceResponseType<List<string>> response = await _projectService.AddUserToProject(request.UserId, request.ProjectId, updatePayload);
+            ServiceResponseType<Dictionary<string, Dictionary<string, string>>> response = await _projectService.AddUserToProject(request.UserId, request.ProjectId, updatePayload);
             return ControllerResponse(response.StatusCode, response.Payload);
         }
 
@@ -85,7 +85,7 @@ namespace BugTracker.Controllers
         [HttpPatch("api/v2/project/remove-contributor")]
         public async Task<IActionResult> RemoveContributor(RemoveContributorFromProjectRequest request)
         {
-            ServiceResponseType<List<string>> response = await _projectService.RemoveUserFromProject(request.UserId, request.ProjectId);
+            ServiceResponseType<Dictionary<string, Dictionary<string, string>>> response = await _projectService.RemoveUserFromProject(request.UserId, request.ProjectId);
             return ControllerResponse(response.StatusCode, response.Payload);
         }
 

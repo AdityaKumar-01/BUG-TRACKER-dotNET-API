@@ -18,12 +18,20 @@ public class UserController : HelperAndBaseController
     }
 
     // POST: api/v1/User
-    [HttpPost("api/v2/user")]
-    public async Task<IActionResult> Join(JoinUserRequest request)
+    [HttpPost("api/v2/user/sign-up")]
+    public async Task<IActionResult> SignUp(SignUpRequest request)
     {
-        var user = new User(RandomString(), request.Name, request.Password, request.ContributorOfProject, request.AssignedIssue);
-        ServiceResponseType<User> response = await _userService.Join(user);
-        return ControllerResponse(response.StatusCode, response.Payload, nameof(Join), user.UserId);
+        User user = new User(RandomString(), request.Name, request.Password, request.Email, request.ContributorOfProject, request.AssignedIssue);
+        ServiceResponseType<User> response = await _userService.SignUp(user);
+        return ControllerResponse(response.StatusCode, response.Payload, nameof(SignUp), user.UserId);
+    }
+
+    [HttpPost("api/v2/user/sign-in")]
+    public async Task<IActionResult> SignIn(SignInRequest request)
+    {
+        
+        ServiceResponseType<User> response = await _userService.SignIn(request.Email, request.Password);
+        return ControllerResponse(response.StatusCode, response.Payload);
     }
 
     // GET: api/v1/User
@@ -48,9 +56,7 @@ public class UserController : HelperAndBaseController
     public async Task<IActionResult> UpdateUserDetails(UpdateUserDetailsRequest request, string UserId)
     {
         var user = new User(request.Name, request.Password);
-
         ServiceResponseType<User> response = await _userService.UpdateUserDetails(user,UserId);
-
         return ControllerResponse(response.StatusCode, response.Payload);
     }
     
