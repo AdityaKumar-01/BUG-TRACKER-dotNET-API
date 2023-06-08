@@ -1,71 +1,109 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿namespace BugTracker.Controllers;
+using Microsoft.AspNetCore.Mvc;
 using BugTracker.Models.User;
 using BugTracker.Services.User;
 using BugTracker.Contracts.UserContracts;
-namespace BugTracker.Controllers
+using BugTracker.Models.ServiceResponseType;
+
+
+[ApiController]
+//[Route("api/v2/[controller]")]
+public class UserController : HelperAndBaseController
 {
-    [ApiController]
-    [Route("api/v1/[controller]")]
-    public class UserController : ControllerBase
+    private readonly IUserService _userService;
+    
+    public UserController(IUserService userService)
     {
-        private readonly IUserService _userService;
+        _userService = userService;
+    }
 
-        public UserController(IUserService userService)
-        {
-            _userService = userService;
-        }
-        private static Random random = new Random();
-        public static string RandomString()
-        {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            return new string(Enumerable.Repeat(chars, 24)
-                .Select(s => s[random.Next(s.Length)]).ToArray());
-        }
-        // GET: api/v1/User
-        [HttpGet]
-        public Task<List<User>> GetAllUser()
-        {
-            return _userService.GetAllUser();
-        }
+    // POST: api/v1/User
+    [HttpPost("api/v2/user/sign-up")]
+    public async Task<IActionResult> SignUp(SignUpRequest request)
+    {
+        User user = new User(RandomString(), request.Name, request.Password, request.Email, request.ContributorOfProject, request.AssignedIssue);
+        ServiceResponseType<User> response = await _userService.SignUp(user);
+        return ControllerResponse(response.StatusCode, response.Payload, nameof(SignUp), user.UserId);
+    }
 
-        // GET: api/v1/User/:UserId
-        [HttpGet("{UserId}")]
-        public async Task<IActionResult> GetByUserId(string UserId)
-        {
-            var response = await _userService.GetByUserId(UserId);
+    [HttpPost("api/v2/user/sign-in")]
+    public async Task<IActionResult> SignIn(SignInRequest request)
+    {
+        
+        ServiceResponseType<User> response = await _userService.SignIn(request.Email, request.Password);
+        UserResponse ControllerPayload = new UserResponse(response.Payload.UserId, response.Payload.Name, response.Payload.Email);
+        return ControllerResponse(response.StatusCode, ControllerPayload);
+    }
 
-            return Ok(response);
-        }
+    // GET: api/v1/User
+    [HttpGet("api/v2/user")]
+    public async Task<IActionResult> GetAllUser()
+    {
+        ServiceResponseType<List<User>> response = await _userService.GetAllUser();
+        return ControllerResponse(response.StatusCode, response.Payload);
+    }
 
-        // POST: api/v1/User
-        [HttpPost]
-        public async Task<IActionResult> Join(JoinUserRequest request)
-        {
-            var user = new User(RandomString(), request.password);
-            var response = await _userService.Join(user);
+    // GET: api/v1/User/:UserId
+    [HttpGet("api/v2/user/{UserId}")]
+    public async Task<IActionResult> GetByUserId(string UserId)
+    {
+        ServiceResponseType<User> response = await _userService.GetByUserId(UserId);
 
-            return CreatedAtAction(nameof(Join), new {id= request.UserId}, response);
-        }
+        return ControllerResponse(response.StatusCode, response.Payload);
+    }
 
-        // PUT: api/v1/User/
-        [HttpPut]
-        public async Task<IActionResult> UpdateUser(UpsertUserRequest request)
-        {
-            var user = new User(request.UserId, request.password);
-
-            var response = await _userService.UpdateUser(user, user.UserId);
-
-            return Ok(response);
-        }
-
-        // DELETE: api/v1/User
-        [HttpDelete("{UserId}")]
-        public IActionResult DeleteUser(string UserId)
-        {
-            _userService.DeleteUser(UserId);
-            return Ok();
-
-        }
+    // PUT: api/v1/User/
+    [HttpPatch("api/v2/user/{UserId}")]
+    public async Task<IActionResult> UpdateUserDetails(UpdateUserDetailsRequest request, string UserId)
+    {
+        User user = new User(request.Name, request.Password);
+        ServiceResponseType<User> response = await _userService.UpdateUserDetails(user,UserId);
+        return ControllerResponse(response.StatusCode, response.Payload.Name);
+    }
+    
+    //PATCH: api/v2/user/addtoproject
+    [HttpPatch("api/v2/user/addtoproject")]
+    public async Task<IActionResult> AddToProject(UpdateProjectListRequest request)
+    {
+        ServiceResponseType<List<string>> response  = await _userService.AddIdToProjectList(request.UserId, request.ProjectId);
+        return ControllerResponse(response.StatusCode, response.Payload);
 
     }
+
+    //PATCH: api/v2/user/removefromproject
+    [HttpPatch("api/v2/user/removefromproject")]
+    public async Task<IActionResult> RemoveFromProject(UpdateProjectListRequest request)
+    {
+        ServiceResponseType<List<string>> response = await _userService.RemoveIdFromProjectList(request.UserId, request.ProjectId);
+        return ControllerResponse(response.StatusCode, response.Payload);
+
+    }
+
+    //PATCH: api/v2/user/addissue
+    [HttpPatch("api/v2/user/addissue")]
+    public async Task<IActionResult> AddIssue(UpdateIssueListRequest request)
+    {
+        ServiceResponseType<List<string>> response = await _userService.AddIdToIssueList(request.UserId, request.IssueId);
+        return ControllerResponse(response.StatusCode, response.Payload);
+
+    }
+    
+    //PATCH: api/v2/user/removefromproject
+    [HttpPatch("api/v2/user/removefromissue")]
+    public async Task<IActionResult> RemoveFromIssue(UpdateIssueListRequest request)
+    {
+        ServiceResponseType<List<string>> response = await _userService.RemoveIdFromIssueList(request.UserId, request.IssueId);
+        return ControllerResponse(response.StatusCode, response.Payload);
+
+    }
+    
+    // DELETE: api/v1/User
+    [HttpDelete("api/v2/user/{UserId}")]
+    public async Task<IActionResult> DeleteUser(string UserId)
+    {
+        ServiceResponseType<User> response = await _userService.DeleteUser(UserId);
+        return ControllerResponse(response.StatusCode, response.Payload);
+
+    }
+
 }

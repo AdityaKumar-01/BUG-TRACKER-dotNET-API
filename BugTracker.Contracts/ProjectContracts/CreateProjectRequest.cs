@@ -8,14 +8,15 @@ namespace BugTracker.Contracts.ProjectContracts
 {
     public record CreateProjectRequest
    (
-        string ProjectName,
+        string Name,
         string Description,
         string Version,
         string OwnerId,
         string OwnerName,
         DateTime CreatedAt,
         DateTime UpdatedAt,
-        List<string> Contributors,
+        Dictionary<string, Dictionary<string,string>> Contributors,
+        List<string> HasIssue,
         List<string> Tags
    );
 }

@@ -40,3 +40,13 @@ C:\Users\adity\Desktop\C#API\BugTracker\BugTracker\bin\Debug\net6.0\ZstdSharp.dl
 C:\Users\adity\Desktop\C#API\BugTracker\BugTracker\bin\Debug\net6.0\runtimes\linux\native\libmongocrypt.so
 C:\Users\adity\Desktop\C#API\BugTracker\BugTracker\bin\Debug\net6.0\runtimes\osx\native\libmongocrypt.dylib
 C:\Users\adity\Desktop\C#API\BugTracker\BugTracker\bin\Debug\net6.0\runtimes\win\native\mongocrypt.dll
+C:\Users\adity\Desktop\C#API\BugTracker\BugTracker\bin\Debug\net6.0\Newtonsoft.Json.dll
+C:\Users\adity\Desktop\C#API\BugTracker\BugTracker\bin\Debug\net6.0\Autofac.dll
+C:\Users\adity\Desktop\C#API\BugTracker\BugTracker\bin\Debug\net6.0\Tweetinvi.Controllers.dll
+C:\Users\adity\Desktop\C#API\BugTracker\BugTracker\bin\Debug\net6.0\Tweetinvi.Core.dll
+C:\Users\adity\Desktop\C#API\BugTracker\BugTracker\bin\Debug\net6.0\Tweetinvi.Credentials.dll
+C:\Users\adity\Desktop\C#API\BugTracker\BugTracker\bin\Debug\net6.0\Tweetinvi.Logic.dll
+C:\Users\adity\Desktop\C#API\BugTracker\BugTracker\bin\Debug\net6.0\Tweetinvi.Security.dll
+C:\Users\adity\Desktop\C#API\BugTracker\BugTracker\bin\Debug\net6.0\Tweetinvi.Streams.dll
+C:\Users\adity\Desktop\C#API\BugTracker\BugTracker\bin\Debug\net6.0\Tweetinvi.WebLogic.dll
+C:\Users\adity\Desktop\C#API\BugTracker\BugTracker\bin\Debug\net6.0\Tweetinvi.dll

@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 
 namespace BugTracker.Contracts.ProjectContracts
 {
-    public record UpdateContributorsRequest
+    public record AddContributorRequest
    (
        string UserId,
-       string ProjectId
+       string ProjectId,
+       string Role,
+       string UserName
    );
 }

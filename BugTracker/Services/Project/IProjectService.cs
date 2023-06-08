@@ -1,15 +1,17 @@
 ﻿namespace BugTracker.Services.Project;
 using BugTracker.Models.Project;
+using BugTracker.Models.ServiceResponseType;
 
 public interface IProjectService
 {
-    Task<List<Project>> GetAllProject();
-    Task<Project> GetByProjectId(string ProjectId);
-    Task<string> CreateProject(Project project);
-    Task<Project> UpdateProjectDetails(Project project, string ProjectId);
-    Task<string> DeleteProject(string ProjectId);
-    Task<List<string>> AddUserToProject(string UserId, string ProjectId);
-    Task<List<string>> RemoveUserFromProject(string UserId, string ProjectId);
-
+    Task<ServiceResponseType<List<Project>>> GetAllProject();
+    Task<ServiceResponseType<Project>> GetByProjectId(string ProjectId);
+    Task<ServiceResponseType<Project>> CreateProject(Project project);
+    Task<ServiceResponseType<Project>> UpdateProjectDetails(Project project, string ProjectId);
+    Task<ServiceResponseType<Dictionary<string, Dictionary<string, string>>>> AddUserToProject(string UserId, string ProjectId, Dictionary<string, string> updatePayload);
+    Task<ServiceResponseType<Dictionary<string, Dictionary<string, string>>>> RemoveUserFromProject(string UserId, string ProjectId);
+    Task<ServiceResponseType<List<string>>> AddIssueToProject(string IssueId, string ProjectId);
+    Task<ServiceResponseType<List<string>>> RemoveIssueFromProject(string IssueId, string ProjectId);
+    Task<ServiceResponseType<string>> DeleteProject(string ProjectId);
 }
 
