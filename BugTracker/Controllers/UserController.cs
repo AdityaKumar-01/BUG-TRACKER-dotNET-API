@@ -31,7 +31,8 @@ public class UserController : HelperAndBaseController
     {
         
         ServiceResponseType<User> response = await _userService.SignIn(request.Email, request.Password);
-        return ControllerResponse(response.StatusCode, response.Payload);
+        UserResponse ControllerPayload = new UserResponse(response.Payload.UserId, response.Payload.Name, response.Payload.Email);
+        return ControllerResponse(response.StatusCode, ControllerPayload);
     }
 
     // GET: api/v1/User
@@ -55,9 +56,9 @@ public class UserController : HelperAndBaseController
     [HttpPatch("api/v2/user/{UserId}")]
     public async Task<IActionResult> UpdateUserDetails(UpdateUserDetailsRequest request, string UserId)
     {
-        var user = new User(request.Name, request.Password);
+        User user = new User(request.Name, request.Password);
         ServiceResponseType<User> response = await _userService.UpdateUserDetails(user,UserId);
-        return ControllerResponse(response.StatusCode, response.Payload);
+        return ControllerResponse(response.StatusCode, response.Payload.Name);
     }
     
     //PATCH: api/v2/user/addtoproject

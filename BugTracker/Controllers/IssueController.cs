@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using BugTracker.Models.Issue;
 using BugTracker.Contracts.IssueContracts;
 using BugTracker.Models.ServiceResponseType;
-using System.Net.Http;
 using System.Text;
 
 namespace BugTracker.Controllers

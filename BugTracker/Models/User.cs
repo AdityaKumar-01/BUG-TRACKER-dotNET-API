@@ -30,5 +30,12 @@ namespace BugTracker.Models.User
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Password = password ?? throw new ArgumentNullException(nameof(password));
         }
+
+        public User(string userId, string name, string email) 
+        {
+            Email = email;
+            UserId = userId ;
+            Name = name ;
+        }
     }
 }

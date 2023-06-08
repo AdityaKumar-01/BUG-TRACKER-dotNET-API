@@ -157,10 +157,9 @@ public class ProjectService : IProjectService
             var requiredProject = await _projectCollection.Find(filter).FirstOrDefaultAsync();
             if (requiredProject != null)
             {
-                var updatedAttribute = requiredProject.Contributors;
+                Dictionary<string, Dictionary<string, string>> updatedAttribute = requiredProject.Contributors;
                 updatedAttribute.Remove(UserId);
-                var updatedList = updatedAttribute.Keys.ToList();
-                UpdateDefinition<Project> update = Builders<Project>.Update.Set("Contributors", updatedList);
+                UpdateDefinition<Project> update = Builders<Project>.Update.Set("Contributors", updatedAttribute);
                 var result = await _projectCollection.UpdateOneAsync(filter, update);
                 if (result.IsAcknowledged == false)
                 {
@@ -207,6 +206,7 @@ public class ProjectService : IProjectService
         }
         catch (Exception e)
         {
+            Console.WriteLine(e.Message);
             response = new ServiceResponseType<List<string>>(502, e.Message);
         }
         return response;

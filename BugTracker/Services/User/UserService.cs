@@ -9,6 +9,7 @@ using MongoDB.Bson;
 using BugTracker.Models.ServiceResponseType;
 using System.Text;
 using Tweetinvi.Security;
+using System.Security.Cryptography;
 
 public class UserService : IUserService
 {
@@ -22,17 +23,24 @@ public class UserService : IUserService
 
     public static string Hashing(string pwd)
     {
-        var data = Encoding.ASCII.GetBytes(pwd);
-        var sha1 = new SHA1CryptoServiceProvider();
-        var sha1data = sha1.ComputeHash(data);
-        ASCIIEncoding ascii = new ASCIIEncoding();
-        var hashedPassword = ascii.GetString(sha1data);
-        return hashedPassword;
+        var sha1 = new SHA1Managed();
+
+        var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(pwd));
+        var sb = new StringBuilder(hash.Length * 2);
+
+        foreach (byte b in hash)
+        {
+            sb.Append(b.ToString("X2"));
+        }
+
+        return sb.ToString();
+
     }
-    
+
     public async Task<ServiceResponseType<User>> SignUp(User user)
     {
         ServiceResponseType<User> response;
+        user.Password = Hashing(user.Password);
         try
         {
             FilterDefinition<User> filter = Builders<User>.Filter.Eq("Email", user.Email);
@@ -44,7 +52,7 @@ public class UserService : IUserService
             }
             else
             {
-                response = new ServiceResponseType<User>(409, user, "User Exist");
+                response = new ServiceResponseType<User>(409, user);
             }
 
         }
@@ -72,7 +80,8 @@ public class UserService : IUserService
             }
             else
             {
-                response = new ServiceResponseType<User>(200, email);
+                Console.Write(email);
+                response = new ServiceResponseType<User>(200,new User(result.UserId, result.Name, result.Email));
             }
 
         }
@@ -82,7 +91,7 @@ public class UserService : IUserService
         }
         return response;
     }
-    
+
     public async Task<ServiceResponseType<List<User>>> GetAllUser()
     {
         ServiceResponseType<List<User>> response;
@@ -135,13 +144,16 @@ public class UserService : IUserService
         try
         {
             FilterDefinition<User> filter = Builders<User>.Filter.Eq("UserId", UserId);
-            UpdateDefinition<User> update = Builders<User>.Update.Set("Name", user.Name).Set("Password", user.Password);
+            UpdateDefinition<User> update = Builders<User>.Update.Set("Name", user.Name).Set("Password", Hashing(user.Password));
             var result = await _userCollection.UpdateOneAsync(filter, update);
             if (result.MatchedCount == 0)
             {
                 response = new ServiceResponseType<User>(404);
             }
-            else
+            else if(result.IsAcknowledged==false)
+            {
+                response = new ServiceResponseType<User>(502);
+            }
             {
                 var searchResult = await _userCollection.Find(filter).FirstOrDefaultAsync();
                 response = new ServiceResponseType<User>(200, searchResult);

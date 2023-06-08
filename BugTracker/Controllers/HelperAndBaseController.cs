@@ -40,6 +40,9 @@ namespace BugTracker.Controllers
             {
                 return StatusCode(401, "User is unauthorized");
             }
+            else{
+                return StatusCode(200);
+            }
         }
     }
 }

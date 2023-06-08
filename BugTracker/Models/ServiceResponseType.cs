@@ -22,10 +22,10 @@ public class ServiceResponseType<T>
             _ => null
         };
     }
-    public ServiceResponseType(int statusCode, T payload, string message = "")
+    public ServiceResponseType(int statusCode, T payload)
     {
         StatusCode = statusCode;
-        StatusMessage = message == "" ? GetDefaultMessageForStatusCode(statusCode) : message;
+        StatusMessage = GetDefaultMessageForStatusCode(statusCode);
         Payload = payload;
     }
     public ServiceResponseType(int statusCode, string message = "")
